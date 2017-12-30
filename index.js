@@ -4,13 +4,28 @@ let popSize = 100;
 let citiesQtd = 10;
 let generationsQtd = 200;
 let mutationProb = 0.3;
-let gridSize = { x: 100, y: 100 };
+let gridSize = { x: 500, y: 500 };
+
+const canvas = document.getElementById('canvas');
+const canvasCtx = canvas.getContext('2d');
 
 //generateGrid(gridSize);
-const cities = generateRndCoords(gridSize, citiesQtd);
+const cities = utils.generateRndCoords(gridSize, citiesQtd);
 let population = generatePopulation(popSize); //of Chromosomes.
 let parents = [];
 let tempOffspring = [];
+
+
+utils.drawCanvas({
+    canvas: canvas,
+    color: 'black',
+    width: gridSize.x + 50,
+    height: gridSize.y + 50,
+    yStart: 10,
+    xStart: 10
+});
+
+drawCities(cities, canvasCtx);
 
 
 //#region Optimization loop
@@ -31,6 +46,7 @@ population = calculateFitness(population); //Calculates the fitness of the popul
 let temp = population.map(el => el.fitness)
 let best = temp.reduce((a, b) => Math.min(a, b));
 let bestChromosome = population.find(el => el.fitness = best); //⚠ Shown here gene repetition
+drawPath(bestChromosome.genes, canvasCtx);
 console.log(population);
 //#endregion
 
@@ -60,7 +76,7 @@ function generatePopulation(size) {
     //generates n times chromosomes
     for (let x = 0; x < size; x++) {
 
-        const genes = shuffleList(cities);
+        const genes = utils.shuffleList(cities);
         const chromosome = new Chromosome(genes);
 
         chromosomes.push(chromosome);
@@ -82,7 +98,7 @@ function calculateFitness(population) {
     pop.forEach((el, index) => {
 
         for (let z = 0; z < genesLength - 1; z++) {
-            el.fitness += 0 - calcDistance(el.genes[z], el.genes[z + 1]);
+            el.fitness += 0 - utils.calcDistance(el.genes[z], el.genes[z + 1]);
         }
 
     });
@@ -123,13 +139,6 @@ function generateParents(population) {
  * @returns {Array} Offspring array.
  */
 function generateOffspring(parents) {
-    // parents.forEach((el, g, array) => {
-    //     el.forEach(elm => {
-    //         if (hasUndefined(elm.genes)) {
-    //             debugger;
-    //         }
-    //     });
-    // });
     const genesLength = parents[0][0].genes.length;
     const genesToCross = Math.ceil(genesLength * 0.3);
     let offspring = [];
@@ -145,14 +154,13 @@ function generateOffspring(parents) {
 
         let z = 0;
         tempGenes.forEach((el, f) => {
-
             //Searches for an element el, starting after the element: searcher for duplicates
             if (tempGenes.includes(el, f + 1)) {
                 tempGenes[f] = parentPartGenes[z];
                 if (!tempGenes[f]) {
                     debugger;
                 }
-                z + 1;
+                ++z;
             }
         });
 
@@ -197,4 +205,37 @@ function mutateOffspring(offspring, probability) {
 
 function hasUndefined(list) {
     return !list.every(el => el);
+}
+
+function drawCities(cities, ctx) {
+    ctx.beginPath();
+    cities.forEach((city, i) => {
+        canvasCtx.moveTo(city.x + 5, city.y);
+        utils.drawCircle({ radius: 5, canvas: canvas, color: 'white', style: 'stroke' }, { x: city.x, y: city.y });
+    });
+}
+
+function drawPath(paths, ctx) {
+    ctx.beginPath();
+    let done = false;
+    let list = yieldList(paths);
+    let list1 = yieldList(paths);
+    list1.next();
+
+    while (!done) {
+        const path = list.next();
+        const path1 = list1.next();
+        ctx.moveTo(path.value.x, path.value.y);
+        if (!path1.done) {
+            ctx.lineTo(path1.value.x, path1.value.y);
+        }
+        done = path1.done;
+    }
+    ctx.stroke();
+}
+
+function* yieldList(list) {
+    for (let i = 0; i < list.length; i++) {
+        yield list[i];
+    }
 }

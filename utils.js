@@ -1,8 +1,21 @@
 'using strict';
 
 function shuffleList(list) {
-    let temp = list.slice();
-    return temp.sort(() => 0.5 - Math.random());
+    // let temp = list.slice();
+    // return temp.sort(() => 0.5 - Math.random());
+
+    let input = list.slice();
+    const length = input.length;
+     
+    for (let i = length-1; i >=0; i--) {
+     
+        const randomIndex = Math.floor(Math.random()*(i+1)); 
+        const itemAtIndex = input[randomIndex]; 
+         
+        input[randomIndex] = input[i]; 
+        input[i] = itemAtIndex;
+    }
+    return input;
 }
 
 /**

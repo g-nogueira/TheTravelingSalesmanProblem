@@ -2,42 +2,51 @@
 
 let popSize = 100;
 let citiesQtd = 10;
-let generationsQtd = 1000;
+let generationsQtd = 200;
 let mutationProb = 0.3;
 let gridSize = { x: 100, y: 100 };
 
 //generateGrid(gridSize);
 const cities = generateRndCoords(gridSize, citiesQtd);
-
-//#region Population initialization
 let population = generatePopulation(popSize); //of Chromosomes.
-population = calculateFitness(population); //Calculates the fitness of the population and returns itself.
-console.log(population);
+let parents = [];
+let tempOffspring = [];
 
-const parents = generateParents(population); //Array of parents. Each group has one "male" and one "female" chromosome.
-const tempOffspring = generateOffspring(parents); //Generate offspring through parents' array.
-//#endregion
 
 //#region Optimization loop
-// for (let i = 0; i < generationsQtd; i++) {
-//     const parents = generateParents(population); //Array of parents. Each group has one "male" and one "female" chromosome.
-//     const tempOffspring = generateOffspring(parents); //Generate offspring through parents' array.
-//     population = mutateOffspring({ offspring: tempOffspring, mutationProb: mutationProb }); //Mutates by chance the offspring and returns itself.
-// }
+for (let i = 0; i < generationsQtd; i++) {
+    population = calculateFitness(population); //Calculates the fitness of the population and returns itself.
+    parents = generateParents(population); //Array of parents. Each group has one "male" and one "female" chromosome.
+    tempOffspring = generateOffspring(parents); //Generate offspring through parents' array.
+    tempOffspring.forEach((el, g, array) => {
+        let t = i;
+        if (hasUndefined(el.genes)) {
+            debugger;
+        }
+    });
+
+    population = mutateOffspring(tempOffspring, mutationProb); //Mutates by chance the offspring and returns itself.
+}
+population = calculateFitness(population); //Calculates the fitness of the population and returns itself.
+let temp = population.map(el => el.fitness)
+let best = temp.reduce((a, b) => Math.min(a, b));
+let bestChromosome = population.find(el => el.fitness = best); //⚠ Shown here gene repetition
+console.log(population);
 //#endregion
 
 
 /************************************************************************************
  *                              IMPLEMENTATION
  *   
- * ⚠ Last gene of every parent is generated as the same. Check 🔎 "generateParents" function.
+ * ⚠ It is repeating genes. Check 🔎 "generateParents" function.
+ * ⚠ CORRECTED - Last gene of every parent is generated as the same. Check 🔎 "generateParents" function.
  *
  * ✔ 1. Generate a set of Chromosomes (Population) formed by a random generated genes
  * ✔ 2. Calculate the fitness of each chromosome by getting the total distance traveled
  *      The distances are represented by negative numbers, so the larger distance will be the smaller fitness
  * ✔ 3. Select by chance random chromosomes to be parents
  * ✔ 4. Crossover parents to generate offspring
- * ✖ 5. Mutate offspring by chance.
+ * ✔ 5. Mutate offspring by chance.
  * 
  ************************************************************************************/
 
@@ -49,7 +58,7 @@ function generatePopulation(size) {
 
     let chromosomes = [];
     //generates n times chromosomes
-    for (let i = 0; i < size; i++) {
+    for (let x = 0; x < size; x++) {
 
         const genes = shuffleList(cities);
         const chromosome = new Chromosome(genes);
@@ -72,8 +81,8 @@ function calculateFitness(population) {
     const pop = population;
     pop.forEach((el, index) => {
 
-        for (let i = 0; i < genesLength - 1; i++) {
-            el.fitness += 0 - calcDistance(el.genes[i], el.genes[i + 1]);
+        for (let z = 0; z < genesLength - 1; z++) {
+            el.fitness += 0 - calcDistance(el.genes[z], el.genes[z + 1]);
         }
 
     });
@@ -91,21 +100,20 @@ function generateParents(population) {
     const newChroms = population.slice();
     const totalFitness = population.reduce((acc, cur) => { return acc + cur.fitness }, 0);
 
-    newChroms.forEach(chrom => chrom.weight = chrom.fitness / totalFitness); //set the id as the weight of each chromosome based on the fitness
-    newChroms.sort((a, b) => a.weight - b.weight);
+    //set the weight as the id of each chromosome based on the fitness
+    newChroms.forEach((chrom, c) => chrom.weight = (chrom.fitness / totalFitness) + ((newChroms[c - 1]) ? newChroms[c - 1].weight : 0));
 
-    const max = newChroms[popSize - 1].weight; //the max possible random value
-
-    for (let i = 0; i < popSize; i++) {
+    for (let a = 0; a < popSize; a++) {
 
         let p = [];
 
-        for (let i = 0; i < 2; i++) {
-            const rnd = Math.random() * max;
+        for (let b = 0; b < 2; b++) {
+            const rnd = Math.random();
             p.push(newChroms.find(chrom => chrom.weight >= rnd));
         }
         parents.push(p);
     }
+
     return parents;
 }
 
@@ -115,6 +123,13 @@ function generateParents(population) {
  * @returns {Array} Offspring array.
  */
 function generateOffspring(parents) {
+    // parents.forEach((el, g, array) => {
+    //     el.forEach(elm => {
+    //         if (hasUndefined(elm.genes)) {
+    //             debugger;
+    //         }
+    //     });
+    // });
     const genesLength = parents[0][0].genes.length;
     const genesToCross = Math.ceil(genesLength * 0.3);
     let offspring = [];
@@ -123,22 +138,21 @@ function generateOffspring(parents) {
 
         //Gets 3 genes and push to a new array;
         let tempGenes = el[0].genes.slice(genesLength - 1 - genesToCross, genesLength - 1);
-
-        let parentPartGenes = el[1].genes.slice(genesLength - 1 - genesToCross, genesLength - 1);
         const genesToInsert = el[1].genes.slice(0, genesLength - 1 - genesToCross);
-
-        genesToInsert.forEach((el, i) => tempGenes.splice(i, 0, el));
+        genesToInsert.forEach((el, d) => tempGenes.splice(d, 0, el));
         tempGenes.push(el[1].genes[genesLength - 1]);
-
-        parentPartGenes = parentPartGenes.filter(el => !tempGenes.includes(el));
+        parentPartGenes = cities.filter(el => !tempGenes.includes(el));
 
         let z = 0;
-        tempGenes.forEach((el, i) => {
+        tempGenes.forEach((el, f) => {
 
             //Searches for an element el, starting after the element: searcher for duplicates
-            if (tempGenes.includes(el, i + 1)) {
-                tempGenes[i] = parentPartGenes[z];
-                ++z;
+            if (tempGenes.includes(el, f + 1)) {
+                tempGenes[f] = parentPartGenes[z];
+                if (!tempGenes[f]) {
+                    debugger;
+                }
+                z + 1;
             }
         });
 
@@ -146,4 +160,41 @@ function generateOffspring(parents) {
     });
 
     return offspring;
+}
+
+/**
+ * @summary Mutates each offspring based on mutation probability.
+ * @param {Array} offspring The offspring array.
+ * @param {number} probability The mutation probability value.
+ */
+function mutateOffspring(offspring, probability) {
+
+    let offsp = offspring.slice();
+    const geneSize = offsp[0].genes.length;
+
+    offsp.forEach(el => {
+
+        const rnd = Math.random();
+
+        if (probability >= rnd) {
+            const rnd01 = Math.floor(Math.random() * geneSize);
+            let rnd02 = 0;
+            do {
+                rnd02 = Math.floor(Math.random() * geneSize);
+            } while (rnd02 === rnd01);
+
+            // [el.genes[rnd01], el.genes[rnd02]] = [el.genes[rnd02], el.genes[rnd01]];
+            const a = el.genes[rnd01];
+            const b = el.genes[rnd02];
+            el.genes[rnd01] = b;
+            el.genes[rnd02] = a;
+        }
+
+    });
+
+    return offsp;
+}
+
+function hasUndefined(list) {
+    return !list.every(el => el);
 }

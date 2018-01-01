@@ -1,0 +1,8 @@
+.d-inline{
+    display: inline-flex;
+}
+
+.d-list{
+    display: flex;
+    flex-direction: column;
+}

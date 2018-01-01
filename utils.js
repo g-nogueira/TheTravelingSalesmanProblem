@@ -1,7 +1,6 @@
 'using strict';
-
-let x = undefined;
 //⚠ SINGLETON CLASS
+let x = undefined;
 class Utils {
     constructor() {
         if (this !== x && x) {
@@ -64,59 +63,14 @@ class Utils {
         }
     }
 
-    /**
-     * 
-     * @param {object} canvas The canvas parameters.
-     * @param {HTMLCanvasElement} canvas.canvas TThe canvas element.
-     * @param {string} canvas.color The color of the background.
-     * @param {number} canvas.width The width of the canvas.
-     * @param {number} canvas.height The height of the canvas.
-     * @param {number} canvas.xStart The start place of the canvas in the x axis.
-     * @param {number} canvas.yStart The start place of the canvas in the y axis.
-     */
-    drawCanvas(canvas) {
-        
-        canvas.canvas.setAttribute('width', canvas.width + 10);
-        canvas.canvas.setAttribute('height', canvas.height + 10);
-        const ctx = canvas.canvas.getContext('2d');
-        ctx.fillStyle = canvas.color;
-        ctx.fillRect(canvas.xStart, canvas.yStart, canvas.width, canvas.height);
-    }
-
-    /**
-     * 
-     * @param {object} center The x, y coordinates of the center of the circle.
-     * @param {number} center.x The x coordinate of the center of the circle.
-     * @param {number} center.y The y coordinate of the center of the circle.
-     * @param {object} params The circle parameters. 
-     * @param {number} params.radius The radius of the circle.
-     * @param {HTMLCanvasElement} params.canvas The canvas element.
-     * @param {string} params.color of the stroke.
-     * @param {string} params.style Stroke or fill circle.
-     */
-    drawCircle(params, center) {
-        const ctx = params.canvas.getContext('2d');
-        ctx.arc(center.x, center.y, params.radius, 0, 2 * Math.PI);
-
-        const style = {
-            stroke: () => {
-                ctx.strokeStyle = params.color;
-                ctx.stroke();
-            },
-            fill: () => {
-                ctx.fillStyle = params.color;
-                ctx.fill();
+    yieldList(list) {
+        return (function* (list) {
+            for (let i = 0; i < list.length; i++) {
+                yield list[i];
             }
-        };
-        style[params.style]();
-
+        })(list);
     }
 }
 
 const utils = new Utils();
 x = utils;
-Object.defineProperty(utils, "__proto__", {
-    enumerable: true,
-    configurable: false,
-    writable: false
-});
